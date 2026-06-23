@@ -5,13 +5,24 @@
 출력: preprocessing/outputs/boundary_pangyo.geojson, boundary_cheongna.geojson
       각 GeoJSON properties 에 area_m2, source, source_date 기록.
 
-TODO(Phase 0):
-- 판교테크노밸리 사업지구 경계 출처 확보 (성남시 고시)
-- 청라국제업무지구(국제업무용지) 경계 출처 확보 (인천경제자유구역청 지구단위계획 고시)
+Phase 0 확정 (PLAN.md §1-2 참고):
+- 판교테크노밸리(제1판교): 판교지구 특별계획구역(2004.12 지정), 면적 661,157㎡
+  출처: 성남시 판교지구 지구단위계획 (고시번호 TODO — eum.go.kr 원문 확인 필요)
+- 청라국제업무지구: 가구역(144,000㎡)+나구역(134,000㎡) = 278,000㎡
+  출처: IFEZ 지구단위계획 청라국제도시 국제업무지구(plan_se=C03015),
+        토지이음 고시 eum.go.kr seq=519197 (정확한 고시번호·일자 TODO)
+
+TODO: 위 출처에서 실제 경계 polygon 좌표(GeoJSON/도면) 다운로드 후 EXPECTED_AREA_M2 와
+대조 검증 (오차 5% 이내 권장). 좌표 확보 전까지는 area_m2 만 PLAN.md 수치로 하드코딩.
 """
 import geopandas as gpd
 
 OUT_DIR = "preprocessing/outputs"
+
+EXPECTED_AREA_M2 = {
+    "pangyo": 661_157,
+    "cheongna": 278_000,
+}
 
 
 def load_boundary(path: str, name: str, source: str, source_date: str) -> gpd.GeoDataFrame:

@@ -19,13 +19,20 @@ from scipy.sparse.csgraph import dijkstra
 from shapely.ops import unary_union
 
 NETWORK_DIR = "../subway_network/network"
-T = "2026-05-04"  # TODO(Phase 0): 분석 기준시점 확정
+# 분석 기준시점: subway_network 데이터셋의 cutoff("현재")와 동일하게 맞춤 (opening.tsv 참고).
+# 7호선 청라연장(2029~2033 예정)은 이 시점에 미개통이라 데이터셋에도 없음 → 자동 제외됨.
+T = "2026-05-04"
 WALK_BUFFER_M = 500
 CUTOFFS_SEC = {30: 30 * 60, 60: 60 * 60}
 
+# Phase 0 확정 (2026-06-24):
+#   판교: 신분당선/경강선 판교역 (둘 다 같은 광장 앞 환승역, 신분당선을 핵심역으로 채택 —
+#         2011 최초 개통, 강남 직결로 판교테크노밸리 입지 가치를 만든 노선)
+#   청라: 공항철도 청라국제도시역 (2014-06-21 개통, 현재 유일하게 운영 중인 역.
+#         7호선 청라연장은 2029년 이후 예정으로 본 분석 시점에는 미개통)
 CORE_STATIONS = {
-    "pangyo": {"statnm": "판교", "linenm": None},  # TODO: linenm 확정 (신분당선/경강선)
-    "cheongna": {"statnm": None, "linenm": None},  # TODO(Phase 0): 청라국제도시역 개통여부 확인 후 확정
+    "pangyo": {"statnm": "판교", "linenm": "신분당선"},
+    "cheongna": {"statnm": "청라국제도시", "linenm": "공항철도"},
 }
 
 
