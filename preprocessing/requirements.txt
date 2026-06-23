@@ -6,3 +6,4 @@ shapely
 scipy
 osmnx
 requests
+python-dotenv
