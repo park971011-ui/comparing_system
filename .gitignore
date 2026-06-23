@@ -1,0 +1,10 @@
+system/node_modules/
+system/dist/
+data_raw/**/*.geojson
+data_raw/**/*.json
+!data_raw/**/.gitkeep
+.env
+__pycache__/
+*.pyc
+.DS_Store
+.claude/
