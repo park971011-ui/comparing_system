@@ -20,6 +20,7 @@ import time
 import geopandas as gpd
 import pandas as pd
 import requests
+from shapely.geometry import shape
 
 from config import (
     BUILDING_HUB_API_KEY,
@@ -170,7 +171,48 @@ def landuse_for_region(region: str) -> dict:
     with open(f"{OUT_DIR}/landuse_{region}.json", "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
     print(f"[{region}] {result}")
+
+    build_feature_layer(region, parcels, zoning, buildings)
     return result
+
+
+def build_feature_layer(region: str, parcels: list[dict], zoning: list[dict], buildings: pd.DataFrame):
+    """필지 단위 GeoJSON — 지도 컬러맵(주용도) + 클릭 팝업(속성) 용. 시스템 §4 필수기능 대응."""
+    parcel_gdf = gpd.GeoDataFrame(
+        [
+            {"pnu": p["properties"]["pnu"], "jibun": p["properties"].get("jibun", ""),
+             "geometry": shape(p["geometry"])}
+            for p in parcels
+        ],
+        crs="EPSG:4326",
+    )
+    zoning_gdf = gpd.GeoDataFrame(
+        [{"uname": z["properties"].get("uname", "미분류"), "geometry": shape(z["geometry"])} for z in zoning],
+        crs="EPSG:4326",
+    )
+
+    parcel_gdf["_centroid"] = parcel_gdf.geometry.to_crs(epsg=5179).centroid.to_crs(epsg=4326)
+    centroids = gpd.GeoDataFrame(parcel_gdf[["pnu"]], geometry=parcel_gdf["_centroid"], crs="EPSG:4326")
+    joined = gpd.sjoin(centroids, zoning_gdf, how="left", predicate="within")
+    parcel_gdf = parcel_gdf.merge(joined[["pnu", "uname"]].drop_duplicates("pnu"), on="pnu", how="left")
+    parcel_gdf = parcel_gdf.drop(columns=["_centroid"])
+
+    if not buildings.empty:
+        b = buildings.copy()
+        b["totArea"] = pd.to_numeric(b["totArea"], errors="coerce").fillna(0)
+        b["platArea"] = pd.to_numeric(b["platArea"], errors="coerce").fillna(0)
+        b["far"] = b.apply(lambda r: round(r["totArea"] / r["platArea"], 3) if r["platArea"] else None, axis=1)
+        b["pnu"] = b["sigunguCd"] + b["bjdongCd"] + b["platGbCd"].map({"0": "1", "1": "2"}) + b["bun"] + b["ji"]
+        b_small = b[["pnu", "mainPurpsCdNm", "totArea", "platArea", "far", "grndFlrCnt", "useAprDay"]].drop_duplicates("pnu")
+        parcel_gdf = parcel_gdf.merge(b_small, on="pnu", how="left")
+    else:
+        for col in ["mainPurpsCdNm", "totArea", "platArea", "far", "grndFlrCnt", "useAprDay"]:
+            parcel_gdf[col] = None
+
+    parcel_gdf["has_building"] = parcel_gdf["mainPurpsCdNm"].notna()
+    out_path = f"{OUT_DIR}/landuse_{region}_parcels.geojson"
+    parcel_gdf.to_file(out_path, driver="GeoJSON")
+    print(f"[{region}] 필지 레이어 저장: {out_path} ({len(parcel_gdf)}개)")
 
 
 def main():

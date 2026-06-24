@@ -24,6 +24,10 @@ function App() {
     pangyo: EMPTY_FC,
     cheongna: EMPTY_FC,
   });
+  const [parcelData, setParcelData] = useState<Record<Region, FeatureCollection>>({
+    pangyo: EMPTY_FC,
+    cheongna: EMPTY_FC,
+  });
   const [reachCounts, setReachCounts] = useState<ReachCounts | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [statsSummary, setStatsSummary] = useState<any>(null);
@@ -40,12 +44,15 @@ function App() {
       fetch(`${base}data/boundary_cheongna.geojson`).then((r) => r.json()),
       fetch(`${base}data/stats_summary.json`).then((r) => r.json()),
       fetch(`${base}data/accessibility_curve.json`).then((r) => r.json()),
-    ]).then(([pangyoIso, cheongnaIso, counts, pangyoBoundary, cheongnaBoundary, stats, curve]) => {
+      fetch(`${base}data/landuse_pangyo_parcels.geojson`).then((r) => r.json()),
+      fetch(`${base}data/landuse_cheongna_parcels.geojson`).then((r) => r.json()),
+    ]).then(([pangyoIso, cheongnaIso, counts, pangyoBoundary, cheongnaBoundary, stats, curve, pangyoParcels, cheongnaParcels]) => {
       setIsochroneData({ pangyo: pangyoIso, cheongna: cheongnaIso });
       setReachCounts(counts);
       setBoundaryData({ pangyo: pangyoBoundary, cheongna: cheongnaBoundary });
       setStatsSummary(stats);
       setAccessibilityCurve(curve);
+      setParcelData({ pangyo: pangyoParcels, cheongna: cheongnaParcels });
     });
   }, []);
 
@@ -70,6 +77,7 @@ function App() {
             isochroneMinutes={minutes}
             isochroneData={isochroneData[region]}
             boundaryData={boundaryData[region]}
+            parcelData={parcelData[region]}
           />
         ) : (
           <div className="side-by-side">
@@ -78,12 +86,14 @@ function App() {
               isochroneMinutes={minutes}
               isochroneData={isochroneData.pangyo}
               boundaryData={boundaryData.pangyo}
+              parcelData={parcelData.pangyo}
             />
             <MapView
               region="cheongna"
               isochroneMinutes={minutes}
               isochroneData={isochroneData.cheongna}
               boundaryData={boundaryData.cheongna}
+              parcelData={parcelData.cheongna}
             />
           </div>
         )}
