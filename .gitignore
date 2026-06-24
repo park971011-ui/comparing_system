@@ -10,3 +10,8 @@ __pycache__/
 .claude/
 preprocessing/cache/
 preprocessing/outputs/*smoketest*
+
+# REPORT.docx 빌드용 node 의존성 (build_report_docx.js 실행 시 생성)
+/node_modules/
+/package.json
+/package-lock.json

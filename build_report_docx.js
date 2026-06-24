@@ -1,0 +1,305 @@
+const fs = require("fs");
+const {
+  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+  Header, Footer, AlignmentType, HeadingLevel, BorderStyle, WidthType,
+  ShadingType, VerticalAlign, PageNumber, PageBreak,
+} = require("docx");
+
+const FONT = "맑은 고딕";
+const PAGE_W = 11906, PAGE_H = 16838; // A4
+const MARGIN = 1440; // 1 inch
+const CONTENT_W = PAGE_W - MARGIN * 2; // 9026
+
+const border = { style: BorderStyle.SINGLE, size: 4, color: "BBBBBB" };
+const borders = { top: border, bottom: border, left: border, right: border };
+
+function p(text, opts = {}) {
+  return new Paragraph({
+    spacing: { after: 120, ...(opts.spacing || {}) },
+    children: [new TextRun({ text, font: FONT, size: 22, bold: !!opts.bold, ...opts.run })],
+    ...opts.pOpts,
+  });
+}
+
+function h(text, level) {
+  return new Paragraph({
+    heading: level,
+    spacing: { before: 280, after: 140 },
+    children: [new TextRun({ text, font: FONT, bold: true })],
+  });
+}
+
+function note(text) {
+  return new Paragraph({
+    spacing: { after: 140 },
+    children: [new TextRun({ text, font: FONT, size: 19, color: "555555", italics: true })],
+  });
+}
+
+function caption(text) {
+  return new Paragraph({
+    spacing: { after: 160 },
+    children: [new TextRun({ text, font: FONT, size: 17, color: "555555" })],
+  });
+}
+
+function cell(text, opts = {}) {
+  return new TableCell({
+    borders,
+    width: { size: opts.width || 0, type: WidthType.DXA },
+    shading: opts.header ? { fill: "EEF3F8", type: ShadingType.CLEAR } : undefined,
+    margins: { top: 60, bottom: 60, left: 100, right: 100 },
+    verticalAlign: VerticalAlign.CENTER,
+    children: [new Paragraph({
+      children: [new TextRun({ text, font: FONT, size: 18, bold: !!opts.header })],
+    })],
+  });
+}
+
+function table(headerRow, bodyRows, widths) {
+  const total = CONTENT_W;
+  const w = widths || headerRow.map(() => Math.floor(total / headerRow.length));
+  return new Table({
+    width: { size: total, type: WidthType.DXA },
+    columnWidths: w,
+    rows: [
+      new TableRow({ children: headerRow.map((t, i) => cell(t, { header: true, width: w[i] })) }),
+      ...bodyRows.map((row) => new TableRow({ children: row.map((t, i) => cell(String(t), { width: w[i] })) })),
+    ],
+  });
+}
+
+// ---------- 표지 ----------
+const coverInfoRows = [
+  ["과 목 명", "스마트시티 이론과 실제"],
+  ["팀원 (학번 · 성명)", "박세호"],
+  ["지도교수", "여지호"],
+  ["제 출 일", "2026. 06. 25."],
+];
+
+const coverTable = new Table({
+  width: { size: 9360, type: WidthType.DXA },
+  columnWidths: [2600, 6760],
+  rows: coverInfoRows.map(([k, v]) => new TableRow({
+    children: [
+      new TableCell({
+        borders, width: { size: 2600, type: WidthType.DXA },
+        shading: { fill: "EEF3F8", type: ShadingType.CLEAR },
+        margins: { top: 100, bottom: 100, left: 160, right: 160 },
+        verticalAlign: VerticalAlign.CENTER,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: k, font: FONT, bold: true, size: 22 })] })],
+      }),
+      new TableCell({
+        borders, width: { size: 6760, type: WidthType.DXA },
+        margins: { top: 100, bottom: 100, left: 160, right: 160 },
+        verticalAlign: VerticalAlign.CENTER,
+        children: [new Paragraph({ children: [new TextRun({ text: v, font: FONT, size: 22 })] })],
+      }),
+    ],
+  })),
+});
+
+const cover = [
+  new Paragraph({ spacing: { before: 1200, after: 400 }, alignment: AlignmentType.CENTER,
+    children: [new TextRun({ text: "수업 프로젝트 보고서", font: FONT, size: 28 })] }),
+  new Paragraph({ spacing: { after: 100 }, alignment: AlignmentType.CENTER,
+    children: [new TextRun({ text: "데이터로 진단하는 업무지구의 성공과 실패", font: FONT, bold: true, size: 36 })] }),
+  new Paragraph({ spacing: { after: 600 }, alignment: AlignmentType.CENTER,
+    children: [new TextRun({ text: "— 판교테크노밸리 vs 청라국제업무지구 비교분석 —", font: FONT, size: 24 })] }),
+  coverTable,
+  new Paragraph({ children: [new PageBreak()] }),
+];
+
+// ---------- 본문 ----------
+const body = [];
+
+body.push(h("1. 서론", HeadingLevel.HEADING_1));
+body.push(p("판교테크노밸리는 수도권 업무지구 중 가장 자주 성공사례로 인용되는 곳이다. 반면 청라국제업무지구는 2005년 개발계획이 승인된 지 20년이 지난 지금도 부지의 상당 부분이 비어 있다. 두 지역 모두 신도시 계획 단계에서 “자족형 업무거점”으로 설계됐다는 점은 같은데, 결과는 정반대다. 이 보고서는 그 차이를 토지이용·교통망·인구사회 세 영역의 실측 데이터로 설명한다."));
+
+body.push(h("1.1 비교 지역 선정 근거", HeadingLevel.HEADING_2));
+body.push(p("청라국제업무지구를 비교 대상으로 선정한 이유는 다음과 같다."));
+body.push(p("1) 물리적 조성 완료 — 가구역(14.4만㎡)은 2022년 매각되어 현재 건축물대장 데이터가 존재한다(용산국제업무지구처럼 사업 자체가 무산된 경우와 다르다)."));
+body.push(p("2) “실패/저조”의 공신력 있는 근거가 풍부하다:"));
+body.push(p("  • 2005.08 개발계획 최초 승인 → 2007년 LH·건설사 컨소시엄 “청라국제업무타운” 추진 → 2013.12 1차 사업 무산"));
+body.push(p("  • 이후 4조700억원 규모 “G시티 프로젝트” 논의 → 생활형숙박시설 규모 특혜 시비로 협약 불성립"));
+body.push(p("  • 가구역은 2022년에야 (주)청라스마트시티에 매각(최초 계획 대비 17년 지연), 착공은 2024년 말~2025년 초"));
+body.push(p("  • 나구역(13.4만㎡)은 2026년 현재까지도 미매각 — LH가 2026년 상반기 사업자 공모 설명회를 막 시작한 단계"));
+body.push(p("3) 수도권 내 위치로 제공된 지하철 네트워크 데이터로 등시간권 분석이 가능하다."));
+body.push(caption("출처: 중부일보(2024.09.13), 경기일보(2024.01.03), 헤럴드경제(7호선 청라연장 지연 보도) — 부록 참고"));
+
+body.push(h("2. 분석 방법", HeadingLevel.HEADING_1));
+body.push(h("2.1 구역계(분석 경계) 정의", HeadingLevel.HEADING_2));
+body.push(table(
+  ["지역", "경계 정의", "면적", "법적 근거(고시)"],
+  [
+    ["판교테크노밸리(제1판교)", "판교지구 특별계획구역(2004.12 지정)", "661,157㎡(약 20만 평)", "성남시 고시 제2025-6호(2025.1.6) “성남 도시관리계획(지구단위계획: 분당지구, 판교지구 등) 결정(변경) 고시”"],
+    ["청라국제업무지구", "청라국제도시 내 국제업무지구(가+나구역)", "278,000㎡(가 144,000+나 134,000)", "인천광역시경제자유구역청고시 제2024-431호(2024.12.30) “청라국제도시 개발계획 변경, 실시계획 변경 승인 및 지형도면 고시”"],
+  ],
+  [2200, 2700, 2100, 2026]
+));
+body.push(p("한계 — 반드시 밝혀둘 점: 위 두 고시는 개별 지구단위계획 단독 문서가 아니라, 더 큰 단위(택지개발사업 실시계획 / 도시개발 실시계획)의 변경 고시에 포함된 형태다. 두 문서 모두 “변경된 부분만 수록”하는 방식이라 결정도면(경계 좌표) 자체를 구하지 못했다. 이 보고서와 시스템의 구역경계 폴리곤은 공식 면적 수치(661,157㎡ / 278,000㎡)에 정확히 일치시킨 근사 사각형이며, 핵심역 인근에 배치했다(시스템 지도에 빨간 점선으로 표출). 토지이음(eum.go.kr) 이음지도 실측 확인으로 형상의 타당성을 시각적으로 검증했다."));
+
+body.push(h("2.2 핵심역 정의", HeadingLevel.HEADING_2));
+body.push(table(
+  ["지역", "핵심역", "노선", "개통일", "선정 근거"],
+  [
+    ["판교", "판교역", "신분당선", "2011-10-28", "강남 직결 노선으로 테크노밸리 입지가치를 만든 핵심 동선. 경강선 판교역(2016)과 같은 광장에서 환승"],
+    ["청라", "청라국제도시역", "공항철도(AREX)", "2014-06-21", "분석 시점(2026-05-04) 기준 청라에서 유일하게 운영 중인 역. 7호선 청라연장은 지반침하·전동차 수급 문제로 2029~2033년으로 지연되어 미개통"],
+  ],
+  [900, 1700, 1700, 1300, 3426]
+));
+
+body.push(h("2.3 시간·공간 범위 및 단위", HeadingLevel.HEADING_2));
+body.push(table(
+  ["분석", "시간범위", "공간범위", "공간단위"],
+  [
+    ["토지이용(3장)", "건축물대장·연속지적도 2026-06 조회 기준", "구역계(boundary) 내부", "필지(PNU)"],
+    ["등시간권(4장)", "지하철망 2026-05-04 cutoff", "핵심역에서 지하철로 도달 가능한 수도권 전역", "지하철역(노드)→500m 보행버퍼"],
+    ["인구사회 — 구역 내(5장)", "SGIS 2023년 통계", "구역계 내부", "집계구(adm_cd 14자리)"],
+    ["인구사회 — 등시간권 결합(4장)", "SGIS 2023년 통계", "등시간권 polygon(수도권 전역)", "시군구(adm_cd 5자리)"],
+  ],
+  [2300, 2300, 2526, 1900]
+));
+body.push(p("공간단위를 다르게 쓴 이유: 구역 내부 비교(5장)는 정밀도가 중요해 집계구 단위로 계산했다. 그런데 60분 등시간권은 서울·경기·인천에 걸친 60여 개 시군구를 덮는다. 이 범위를 집계구 단위로 받으면 API 호출이 수천 건이 되어 시간 내 처리가 불가능했다. 그래서 등시간권 분석만 시군구 단위(더 거친 해상도)로 처리했다 — 같은 “인구·종사자” 지표라도 분석 목적(구역 내부 정밀 비교 vs 광역 접근성 트렌드)에 따라 해상도를 다르게 선택한 것이다."));
+
+body.push(h("2.4 공간단위 통합(Areal Interpolation)", HeadingLevel.HEADING_2));
+body.push(p("구역계·등시간권 polygon과 SGIS 집계구/시군구 경계는 서로 일치하지 않는다. 경계에 걸친 단위를 그대로 포함시키거나 제외하면 과대·과소 추정이 생긴다. 그래서 교차면적 비율로 인구·종사자 수치를 비례 배분(면적가중, areal interpolation)하는 방법을 통일해서 썼다 — 구역 내부 분석(5장)과 등시간권 분석(4장) 모두 동일한 함수(spatial_utils.areal_weighted_sum)를 공유한다."));
+
+body.push(new Paragraph({ children: [new PageBreak()] }));
+body.push(h("3. 비교 분석 — 토지이용", HeadingLevel.HEADING_1));
+body.push(p("방법: VWorld 연속지적도로 구역계와 교차하는 필지(PNU)를 추출하고, 건축HUB 건축물대장을 같은 필지 키(법정동+지번)로 매칭했다. 매칭이 없는 필지는 “미건축(공지)”으로 분류했다."));
+body.push(table(
+  ["지표", "판교", "청라"],
+  [
+    ["분석 대상 필지 수", "146개", "73개"],
+    ["매칭된 건축물(표제부) 수", "237건", "8건"],
+    ["공지(미건축) 비율", "64.4%", "97.3%"],
+    ["평균 용적률(FAR)", "0.72", "0.32"],
+    ["토지이용 혼합도(LUM 엔트로피)", "0.48", "0.69"],
+    ["최대 비중 용도", "공동주택 45.8%, 업무시설 39.1%", "교육연구시설 63.3%"],
+  ],
+  [3200, 2913, 2913]
+));
+body.push(caption("표 1. 토지이용 비교 (출처: 시스템 통계패널, https://park971011-ui.github.io/comparing_system/)"));
+body.push(p("해석: 공지 비율(97.3% vs 64.4%)과 매칭 건축물 수(8건 vs 237건)는 “조성은 됐지만 거의 비어 있다”는 청라의 상태를 직접 보여준다. 평균 용적률 0.32는 판교의 절반에도 못 미친다 — 즉 남아있는 8건의 건축물조차 저밀도다. 반면 판교는 LUM 혼합도가 더 낮은데(0.48), 이는 역설적으로 “성공”의 한 단면이다: 청라의 LUM이 더 높게 나온 건 용도가 혼합돼서가 아니라, 표본이 8건뿐이라 우연히 몇 개 용도가 섞인 것처럼 보이는 통계적 착시에 가깝다. 표본 수 자체가 활성화 정도를 보여주는 더 직접적인 지표다."));
+body.push(p("판교의 주용도가 업무시설보다 공동주택이 더 큰 비중(45.8%)을 차지하는 것은, 우리가 정의한 구역계(근사 사각형)가 테크노밸리 핵심 연구단지뿐 아니라 주변 삼평동 주거블록 일부를 포함하기 때문이다(2.1절의 경계 근사 한계). 업무시설 39.1%만 따로 봐도 청라(매칭 건물 8건 중 업무시설 없음)보다 압도적으로 높다."));
+
+body.push(new Paragraph({ children: [new PageBreak()] }));
+body.push(h("4. 비교 분석 — 교통망(등시간권)", HeadingLevel.HEADING_1));
+body.push(h("4.1 30분·60분 등시간권 도달역수", HeadingLevel.HEADING_2));
+body.push(table(
+  ["", "30분", "60분"],
+  [
+    ["판교역(신분당선)", "86개 역", "454개 역"],
+    ["청라국제도시역(공항철도)", "50개 역", "303개 역"],
+  ],
+  [3200, 2913, 2913]
+));
+body.push(h("4.2 누적 접근성 곡선 — 도달 가능 종사자수", HeadingLevel.HEADING_2));
+body.push(table(
+  ["경과시간", "판교 도달 종사자", "청라 도달 종사자", "격차(배)"],
+  [
+    ["5분", "8,108", "1,414", "5.7배"],
+    ["15분", "71,266", "7,380", "9.7배"],
+    ["25분", "263,178", "36,907", "7.1배"],
+    ["30분", "511,607", "90,876", "5.6배"],
+    ["45분", "1,450,812", "425,005", "3.4배"],
+    ["60분", "2,392,907", "1,325,281", "1.8배"],
+  ],
+  [1800, 2400, 2400, 1426]
+));
+body.push(caption("표 2. 누적 접근성 곡선(시군구 단위 면적가중). 시스템 화면: 통계패널 상단 라인차트."));
+body.push(p("해석: “핵심역에서 t분 이내 도달 가능한 종사자수”는 그 업무지구가 끌어올 수 있는 노동시장의 크기를 뜻한다. 격차는 모든 시간대에서 일관되게 나타나지만, 특히 출퇴근 핵심 구간인 25~30분에서 5.6~7.1배까지 벌어진다. 판교는 신분당선을 통해 강남 전체 노동시장에 25분 안에 닿는다. 청라는 공항철도 단일 노선으로 서울 도심까지 가는 데 시간이 더 걸리고, 환승이 필요한 노선이 많아 격차가 크다. 60분 시점에서 격차가 1.8배로 줄어드는 건 그만큼 시간이 지나면 결국 수도권 전체를 덮기 때문이며, “단거리 통근권의 질”에서 격차가 가장 크다는 점이 핵심이다."));
+
+body.push(new Paragraph({ children: [new PageBreak()] }));
+body.push(h("5. 비교 분석 — 인구사회", HeadingLevel.HEADING_1));
+body.push(p("방법: 구역계 내부 SGIS 집계구(2023년 통계)를 면적가중으로 결합했다."));
+body.push(table(
+  ["지표", "판교", "청라"],
+  [
+    ["인구", "9,131명", "103명"],
+    ["가구수", "3,693", "74"],
+    ["종사자수", "27,830명", "293명"],
+    ["사업체수", "1,457", "15"],
+    ["직주비(종사자/인구)", "3.05", "2.84"],
+  ],
+  [3200, 2913, 2913]
+));
+body.push(caption("표 3. 인구사회 비교 (SGIS 2023, 집계구 단위 면적가중). 시스템 화면: 통계패널 표 하단."));
+body.push(p("해석: 직주비만 보면 두 지역이 비슷해 보인다(3.05 vs 2.84) — 둘 다 “거주보다 일하는 사람이 많은” 업무 위주 지역이라는 뜻이다. 하지만 절대 규모를 보면 완전히 다른 이야기가 된다. 판교는 27,830명의 종사자를 끌어들이는 노동시장이고, 청라는 293명에 불과하다. 직주비라는 비율 지표만 보면 “두 지역 다 업무 중심지”라는 같은 결론이 나오지만, 절대 수치는 청라가 아직 “업무지구로서의 규모”를 갖추지 못했음을 보여준다. 이는 비율 지표와 절대 지표를 같이 봐야 한다는 방법론적 교훈이기도 하다."));
+
+body.push(new Paragraph({ children: [new PageBreak()] }));
+body.push(h("6. 성공요인 도출", HeadingLevel.HEADING_1));
+body.push(p("세 영역의 결과를 종합하면, 판교테크노밸리의 성공요인은 다음 세 가지로 정리된다."));
+body.push(h("6.1 광역 노동시장 접근성 — “통근권의 크기”", HeadingLevel.HEADING_2));
+body.push(p("판교는 25분 이내에 26.3만 명의 종사자(노동시장)에 닿는다(청라 3.7만 명, 7.1배). 이는 신분당선이라는 강남 직결 노선 하나가 만들어낸 차이다. 기업이 입지를 선택할 때 결정적인 건 “이 지역에 출퇴근 가능한 인재가 얼마나 있는가”이고, 판교는 강남 노동시장 전체를 25분 통근권으로 끌어왔다. 청라는 공항철도 단일 노선의 한계로 이 효과를 누리지 못한다."));
+body.push(h("6.2 개발 실현 속도와 밀도 — “비어있지 않은 땅”", HeadingLevel.HEADING_2));
+body.push(p("판교는 공지 비율 64.4%, 평균 용적률 0.72로 이미 상당 부분 개발이 실현됐다. 청라는 공지 비율 97.3%, 평균 용적률 0.32로 20년 전 계획이 아직 땅 위에 구현되지 못했다. 이 차이는 단순한 시차가 아니라 — 1장에서 정리했듯 1차 사업 무산(2013), G시티 프로젝트 무산, 가구역 17년 지연 매각 — 반복된 사업 좌초의 결과다. 입지가 좋아도 누적된 불확실성이 투자를 막으면 개발이 실현되지 않는다."));
+body.push(h("6.3 노동시장 규모의 자기강화 — “사람이 모여야 사람이 온다”", HeadingLevel.HEADING_2));
+body.push(p("판교의 종사자수(27,830명)는 청라(293명)의 95배다. 이 격차는 위 두 요인(접근성+개발실현)이 누적된 결과이자, 동시에 새로운 원인이 된다. 종사자가 많아지면 상업·서비스 수요가 늘고, 이는 다시 더 많은 기업·인구를 끌어들인다. 한 보도에 따르면 청라 나구역의 당초 4차산업 오피스 콘셉트조차 “스타트업이 이미 판교에 몰려있어 경쟁력이 우려된다”는 이유로 재검토되고 있다 — 판교가 만든 규모의 자기강화가 후발 업무지구의 경쟁력 자체를 깎아먹는 단계에 이른 것이다."));
+
+body.push(h("7. 분석의 한계", HeadingLevel.HEADING_1));
+body.push(p("• 상관과 인과의 구분: 본 분석은 판교-청라 간 차이를 보여주지만, “신분당선이 있어서 성공했다”는 식의 단순 인과로 단정할 수 없다. 신분당선 자체가 판교 개발 초기부터 계획된 것이라 원인과 결과가 얽혀 있다(내생성 문제). 청라의 7호선 연장이 완료되면 격차가 줄어들지는 추가 관찰이 필요하다."));
+body.push(p("• 구역계의 근사치 한계: 2.1절에서 밝혔듯 두 구역의 경계는 정식 결정도면 좌표가 아니라 공식 면적에 맞춘 근사 사각형이다. 특히 판교 쪽 경계에 주거블록이 일부 포함되어 업무시설 비중이 실제보다 낮게 나왔을 수 있다."));
+body.push(p("• 공간단위 해상도 차이: 2.3절에서 밝혔듯 구역 내부 인구사회 분석(집계구)과 등시간권 결합 분석(시군구)의 해상도가 다르다. 두 절대값을 직접 비교하면 안 되고, 같은 해상도 내에서의 상대 비교만 유효하다."));
+body.push(p("• 기준연도 차이 가능성: 건축물대장·연속지적도는 조회 시점(2026-06) 현재 데이터이고, SGIS 인구통계는 2023년 기준이다. 완전히 같은 시점은 아니다."));
+body.push(p("• 표본 크기: 청라의 건축물 매칭 표본이 8건에 불과해, 주용도 비율 등 일부 지표는 통계적으로 불안정할 수 있다(3장 해석 참고)."));
+
+body.push(new Paragraph({ children: [new PageBreak()] }));
+body.push(h("부록", HeadingLevel.HEADING_1));
+body.push(h("A. 제출물 URL", HeadingLevel.HEADING_2));
+body.push(table(["항목", "URL"], [
+  ["배포된 시스템", "https://park971011-ui.github.io/comparing_system/"],
+  ["GitHub 저장소", "https://github.com/park971011-ui/comparing_system"],
+], [2300, 6726]));
+
+body.push(h("B. 데이터 출처 목록", HeadingLevel.HEADING_2));
+body.push(table(["데이터", "출처", "기준시점"], [
+  ["인구·종사자(집계구/시군구)", "SGIS 통계지리정보서비스 (Open API)", "2023년"],
+  ["용도지역지구", "VWorld 2D데이터 Open API (LT_C_UQ111)", "2026-06 조회"],
+  ["건축물대장", "건축HUB 건축물대장정보서비스 (data.go.kr, BldRgstHubService)", "2026-06 조회"],
+  ["연속지적도(필지)", "VWorld 2D데이터 Open API (LP_PA_CBND_BUBUN)", "2026-06 조회"],
+  ["지하철 네트워크", "강의 제공 자료(subway_network.zip)", "2026-05-04 cutoff"],
+], [2300, 4426, 2300]));
+
+body.push(h("C. 주요 분석 화면 (시스템 연계)", HeadingLevel.HEADING_2));
+body.push(p("• 표 1(토지이용) ↔ 시스템 우측 통계패널 상단 막대그래프 + 표"));
+body.push(p("• 표 2(누적 접근성 곡선) ↔ 시스템 우측 통계패널 라인차트"));
+body.push(p("• 표 3(인구사회) ↔ 시스템 우측 통계패널 표 하단 5개 행"));
+body.push(p("• 구역경계·등시간권 폴리곤 ↔ 시스템 지도, 좌상단 슬라이더로 30/60분 전환, 필지 클릭 시 속성 팝업"));
+
+body.push(h("D. AI 활용 내역", HeadingLevel.HEADING_2));
+body.push(p("본 프로젝트는 Claude(Anthropic, claude-sonnet-4-6)를 코딩 보조 도구로 활용했다. 활용 범위는 (1) 전처리 스크립트(Python) 작성 및 API 연동 디버깅, (2) React/MapLibre 기반 시스템 프론트엔드 구현, (3) 공개 출처(VWorld·SGIS·건축HUB·언론보도) 검색 및 1차 정리였다. API에서 받은 수치·통계는 모두 실제 API 응답을 직접 호출·검증했으며(예: 건축HUB의 BldRgstHubService 엔드포인트, VWorld 데이터API의 domain 파라미터 필수 등은 AI가 처음 제시한 정보가 틀려 실제 호출로 재검증함), 구역계 출처 고시번호는 토지이음(eum.go.kr) 직접 조회로 1차 확인했다. 분석의 해석과 성공요인 결론은 본인이 직접 작성했다."));
+
+const doc = new Document({
+  styles: {
+    default: { document: { run: { font: FONT, size: 22 } } },
+    paragraphStyles: [
+      { id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
+        run: { size: 30, bold: true, font: FONT, color: "1A4F8B" },
+        paragraph: { spacing: { before: 320, after: 160 }, outlineLevel: 0 } },
+      { id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
+        run: { size: 25, bold: true, font: FONT, color: "1A4F8B" },
+        paragraph: { spacing: { before: 240, after: 120 }, outlineLevel: 1 } },
+    ],
+  },
+  sections: [{
+    properties: {
+      page: { size: { width: PAGE_W, height: PAGE_H }, margin: { top: MARGIN, right: MARGIN, bottom: MARGIN, left: MARGIN } },
+    },
+    footers: {
+      default: new Footer({
+        children: [new Paragraph({
+          alignment: AlignmentType.CENTER,
+          children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: 18 })],
+        })],
+      }),
+    },
+    children: [...cover, ...body],
+  }],
+});
+
+Packer.toBuffer(doc).then((buffer) => {
+  fs.writeFileSync("REPORT.docx", buffer);
+  console.log("written REPORT.docx");
+});
