@@ -27,6 +27,8 @@ function App() {
   const [reachCounts, setReachCounts] = useState<ReachCounts | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [statsSummary, setStatsSummary] = useState<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [accessibilityCurve, setAccessibilityCurve] = useState<any>(null);
 
   useEffect(() => {
     const base = import.meta.env.BASE_URL;
@@ -37,11 +39,13 @@ function App() {
       fetch(`${base}data/boundary_pangyo.geojson`).then((r) => r.json()),
       fetch(`${base}data/boundary_cheongna.geojson`).then((r) => r.json()),
       fetch(`${base}data/stats_summary.json`).then((r) => r.json()),
-    ]).then(([pangyoIso, cheongnaIso, counts, pangyoBoundary, cheongnaBoundary, stats]) => {
+      fetch(`${base}data/accessibility_curve.json`).then((r) => r.json()),
+    ]).then(([pangyoIso, cheongnaIso, counts, pangyoBoundary, cheongnaBoundary, stats, curve]) => {
       setIsochroneData({ pangyo: pangyoIso, cheongna: cheongnaIso });
       setReachCounts(counts);
       setBoundaryData({ pangyo: pangyoBoundary, cheongna: cheongnaBoundary });
       setStatsSummary(stats);
+      setAccessibilityCurve(curve);
     });
   }, []);
 
@@ -87,7 +91,11 @@ function App() {
       </main>
 
       <aside className="stats-area">
-        <StatsPanel pangyo={statsSummary?.pangyo} cheongna={statsSummary?.cheongna} />
+        <StatsPanel
+          pangyo={statsSummary?.pangyo}
+          cheongna={statsSummary?.cheongna}
+          accessibilityCurve={accessibilityCurve}
+        />
       </aside>
     </div>
   );

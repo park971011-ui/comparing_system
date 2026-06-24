@@ -63,27 +63,33 @@ def build_csr(nodes: pd.DataFrame, links: pd.DataFrame) -> tuple[csr_matrix, dic
     return csr_matrix((cost, (src, dst)), shape=(n, n)), id_map
 
 
-def isochrone_for_region(region: str, nodes: pd.DataFrame, A: csr_matrix, id_map: dict) -> dict:
+def dist_sec_for_region(region: str, nodes: pd.DataFrame, A: csr_matrix, id_map: dict) -> np.ndarray:
+    """핵심역 기준 전역 최단시간(초). 04_population_overlay.py 에서 임의 cutoff(5분 단위 등)로 재사용."""
     cfg = CORE_STATIONS[region]
     row = nodes[(nodes["statnm"] == cfg["statnm"]) & (nodes["linenm"] == cfg["linenm"])]
     if len(row) == 0:
         raise ValueError(f"핵심역을 찾을 수 없음: {region} {cfg}")
     src_idx = id_map[row.iloc[0]["id"]]
+    return dijkstra(A, indices=src_idx)
 
-    dist_sec = dijkstra(A, indices=src_idx)
+
+def polygon_for_cutoff(nodes: pd.DataFrame, dist_sec: np.ndarray, cutoff_sec: float):
+    """주어진 cutoff(초) 이내 도달 노드에 보행버퍼 적용 후 union (EPSG:5179)."""
     nodes = nodes.copy()
     nodes["dist_sec"] = dist_sec
+    reach = nodes[(nodes["dist_sec"] >= 0) & (nodes["dist_sec"] < cutoff_sec)]
+    pts = gpd.GeoSeries(gpd.points_from_xy(reach["x_5179"], reach["y_5179"]), crs="EPSG:5179")
+    return unary_union(pts.buffer(WALK_BUFFER_M).to_list()), len(reach)
+
+
+def isochrone_for_region(region: str, nodes: pd.DataFrame, A: csr_matrix, id_map: dict) -> dict:
+    cfg = CORE_STATIONS[region]
+    dist_sec = dist_sec_for_region(region, nodes, A, id_map)
 
     polygons = {}
     reach_counts = {}
     for minutes, cutoff_sec in CUTOFFS_SEC.items():
-        reach = nodes[(nodes["dist_sec"] >= 0) & (nodes["dist_sec"] < cutoff_sec)]
-        reach_counts[minutes] = len(reach)
-        pts = gpd.GeoSeries(
-            gpd.points_from_xy(reach["x_5179"], reach["y_5179"]), crs="EPSG:5179"
-        )
-        buffered = pts.buffer(WALK_BUFFER_M)
-        polygons[minutes] = unary_union(buffered.to_list())
+        polygons[minutes], reach_counts[minutes] = polygon_for_cutoff(nodes, dist_sec, cutoff_sec)
 
     gdf = gpd.GeoDataFrame(
         {"region": [region] * len(polygons), "minutes": list(polygons.keys())},

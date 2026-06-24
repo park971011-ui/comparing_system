@@ -1,0 +1,146 @@
+{
+  "5": {
+    "pangyo": {
+      "population": 10141.5,
+      "workers": 8107.9,
+      "station_count": 2
+    },
+    "cheongna": {
+      "population": 3679.4,
+      "workers": 1413.8,
+      "station_count": 1
+    }
+  },
+  "10": {
+    "pangyo": {
+      "population": 35133.4,
+      "workers": 31560.8,
+      "station_count": 7
+    },
+    "cheongna": {
+      "population": 8189.4,
+      "workers": 3444.0,
+      "station_count": 3
+    }
+  },
+  "15": {
+    "pangyo": {
+      "population": 82452.8,
+      "workers": 71266.4,
+      "station_count": 17
+    },
+    "cheongna": {
+      "population": 18128.4,
+      "workers": 7380.3,
+      "station_count": 7
+    }
+  },
+  "20": {
+    "pangyo": {
+      "population": 129235.9,
+      "workers": 116210.0,
+      "station_count": 26
+    },
+    "cheongna": {
+      "population": 47059.2,
+      "workers": 20458.5,
+      "station_count": 15
+    }
+  },
+  "25": {
+    "pangyo": {
+      "population": 259124.8,
+      "workers": 263178.1,
+      "station_count": 51
+    },
+    "cheongna": {
+      "population": 85608.5,
+      "workers": 36907.4,
+      "station_count": 28
+    }
+  },
+  "30": {
+    "pangyo": {
+      "population": 477277.7,
+      "workers": 511607.4,
+      "station_count": 86
+    },
+    "cheongna": {
+      "population": 195947.2,
+      "workers": 90876.0,
+      "station_count": 50
+    }
+  },
+  "35": {
+    "pangyo": {
+      "population": 753272.1,
+      "workers": 713990.3,
+      "station_count": 125
+    },
+    "cheongna": {
+      "population": 297110.1,
+      "workers": 137440.5,
+      "station_count": 64
+    }
+  },
+  "40": {
+    "pangyo": {
+      "population": 1174388.9,
+      "workers": 983196.1,
+      "station_count": 170
+    },
+    "cheongna": {
+      "population": 525505.6,
+      "workers": 239423.2,
+      "station_count": 87
+    }
+  },
+  "45": {
+    "pangyo": {
+      "population": 1703107.1,
+      "workers": 1450811.6,
+      "station_count": 241
+    },
+    "cheongna": {
+      "population": 866755.8,
+      "workers": 425004.6,
+      "station_count": 128
+    }
+  },
+  "50": {
+    "pangyo": {
+      "population": 2418557.9,
+      "workers": 1934457.6,
+      "station_count": 336
+    },
+    "cheongna": {
+      "population": 1381263.3,
+      "workers": 730324.5,
+      "station_count": 194
+    }
+  },
+  "55": {
+    "pangyo": {
+      "population": 2916440.3,
+      "workers": 2148383.4,
+      "station_count": 393
+    },
+    "cheongna": {
+      "population": 1708161.1,
+      "workers": 980283.3,
+      "station_count": 246
+    }
+  },
+  "60": {
+    "pangyo": {
+      "population": 3456793.7,
+      "workers": 2392907.3,
+      "station_count": 454
+    },
+    "cheongna": {
+      "population": 2015963.7,
+      "workers": 1325280.8,
+      "station_count": 303
+    }
+  }
+}

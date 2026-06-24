@@ -1,4 +1,4 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 interface RegionLanduse {
   parcel_count: number;
@@ -24,17 +24,34 @@ interface RegionStats {
   socio_demo: RegionSocioDemo;
 }
 
+interface AccessibilityPoint {
+  population: number;
+  workers: number;
+  station_count: number;
+}
+
 interface StatsPanelProps {
   pangyo?: RegionStats;
   cheongna?: RegionStats;
+  accessibilityCurve?: Record<string, { pangyo: AccessibilityPoint; cheongna: AccessibilityPoint }>;
 }
 
 const USAGE_LABELS = ["업무시설", "공동주택", "교육연구시설", "판매시설", "숙박시설"];
 
-export default function StatsPanel({ pangyo, cheongna }: StatsPanelProps) {
+export default function StatsPanel({ pangyo, cheongna, accessibilityCurve }: StatsPanelProps) {
   if (!pangyo || !cheongna) {
     return <div className="stats-panel">데이터 로딩 중...</div>;
   }
+
+  const curveData = accessibilityCurve
+    ? Object.entries(accessibilityCurve)
+        .map(([minute, v]) => ({
+          minute: Number(minute),
+          판교: v.pangyo.workers,
+          청라: v.cheongna.workers,
+        }))
+        .sort((a, b) => a.minute - b.minute)
+    : [];
 
   const usageChartData = USAGE_LABELS.map((name) => ({
     name,
@@ -57,6 +74,18 @@ export default function StatsPanel({ pangyo, cheongna }: StatsPanelProps) {
 
   return (
     <div className="stats-panel">
+      <h3>누적 접근성 곡선 — 도달 종사자수 (시군구 단위 면적가중)</h3>
+      <ResponsiveContainer width="100%" height={200}>
+        <LineChart data={curveData}>
+          <XAxis dataKey="minute" label={{ value: "분", position: "insideBottom" }} tick={{ fontSize: 10 }} />
+          <YAxis tick={{ fontSize: 10 }} />
+          <Tooltip />
+          <Legend />
+          <Line type="monotone" dataKey="판교" stroke="#2563eb" dot={false} />
+          <Line type="monotone" dataKey="청라" stroke="#dc2626" dot={false} />
+        </LineChart>
+      </ResponsiveContainer>
+
       <h3>토지이용 비교 — 건축물 주용도 구성비 (%)</h3>
       <ResponsiveContainer width="100%" height={220}>
         <BarChart data={usageChartData}>
