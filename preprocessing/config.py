@@ -31,6 +31,15 @@ BUILDING_HUB_OPERATIONS = {
     "jijigu": "getBrJijiguInfo",               # 지역지구구역
 }
 
+# VWorld 2D데이터 API(용도지역지구 - 국토계획법) — 검증 완료 (2026-06-24, 판교역 좌표로 "준주거지역" 확인).
+# 주의: 데이터API는 지도/검색API와 달리 "domain" 파라미터(키 발급 시 등록한 서비스 URL)를
+# 반드시 같이 보내야 함 — 빠뜨리면 키가 멀쩡해도 INCORRECT_KEY 오류가 난다.
+VWORLD_DATA_URL = "https://api.vworld.kr/req/data"
+VWORLD_DOMAIN = "https://park971011-ui.github.io/comparing_system/"  # 인증키 발급 시 등록한 서비스 URL
+# LT_C_UQ111 = 도시지역. 다른 용도지역(관리/농림/자연환경보전 등)은 VWorld API레퍼런스의
+# "용도지역지구(국토계획법)" 카테고리에서 레이어 코드를 추가로 확인할 것.
+VWORLD_LAYER_USE_ZONE_URBAN = "LT_C_UQ111"
+
 # Phase 0 확정 (PLAN.md §1)
 REGIONS = {
     "pangyo": {
