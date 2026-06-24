@@ -10,6 +10,23 @@ SGIS_CONSUMER_SECRET = os.getenv("SGIS_CONSUMER_SECRET")
 VWORLD_API_KEY = os.getenv("VWORLD_API_KEY")
 BUILDING_HUB_API_KEY = os.getenv("BUILDING_HUB_API_KEY")
 
+# 건축HUB 건축물대장정보 서비스 (공공데이터포털 id=15134735) — 검증된 base URL.
+# 주의: data.go.kr 문서/예제에 흔히 나오는 "BldRgstService_v2"는 404/500 오류가 남.
+# 올바른 경로는 "BldRgstHubService" (2026-06-24, getBrTitleInfo 로 실키 검증 완료).
+BUILDING_HUB_BASE_URL = "http://apis.data.go.kr/1613000/BldRgstHubService"
+BUILDING_HUB_OPERATIONS = {
+    "basis_oulin": "getBrBasisOulnInfo",      # 기본개요
+    "recap_title": "getBrRecapTitleInfo",      # 총괄표제부
+    "title": "getBrTitleInfo",                 # 표제부
+    "floor_oulin": "getBrFlrOulnInfo",         # 층별개요
+    "atch_jibun": "getBrAtchJibunInfo",        # 부속지번
+    "expos_pubuse_area": "getBrExposPubuseAreaInfo",  # 전유공용면적
+    "wclf": "getBrWclfInfo",                   # 오수정화시설
+    "hsprc": "getBrHsprcInfo",                 # 주택가격
+    "expos": "getBrExposInfo",                 # 전유부
+    "jijigu": "getBrJijiguInfo",               # 지역지구구역
+}
+
 # Phase 0 확정 (PLAN.md §1)
 REGIONS = {
     "pangyo": {
