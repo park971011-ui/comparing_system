@@ -1,10 +1,12 @@
 .app-layout {
   display: grid;
   grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr 320px;
   height: 100vh;
 }
 
 header {
+  grid-column: 1 / -1;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -14,9 +16,8 @@ header {
 
 .map-area {
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr 320px;
   overflow: hidden;
+  min-height: 0;
 }
 
 .side-by-side {
@@ -28,6 +29,7 @@ header {
   border-left: 1px solid #ddd;
   padding: 1rem;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .isochrone-control {

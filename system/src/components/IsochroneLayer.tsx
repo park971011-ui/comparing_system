@@ -1,6 +1,7 @@
 interface IsochroneLayerProps {
   minutes: 30 | 60;
   onChange: (minutes: 30 | 60) => void;
+  reachableStations?: number;
   reachablePopulation?: number;
   reachableWorkers?: number;
 }
@@ -8,6 +9,7 @@ interface IsochroneLayerProps {
 export default function IsochroneLayer({
   minutes,
   onChange,
+  reachableStations,
   reachablePopulation,
   reachableWorkers,
 }: IsochroneLayerProps) {
@@ -26,8 +28,9 @@ export default function IsochroneLayer({
         {minutes}분
       </label>
       <div className="isochrone-stats">
-        <span>도달 인구: {reachablePopulation?.toLocaleString() ?? "-"}</span>
-        <span>도달 종사자: {reachableWorkers?.toLocaleString() ?? "-"}</span>
+        <span>도달 가능역: {reachableStations?.toLocaleString() ?? "-"}</span>
+        <span>도달 인구: {reachablePopulation?.toLocaleString() ?? "집계 중(Phase 1)"}</span>
+        <span>도달 종사자: {reachableWorkers?.toLocaleString() ?? "집계 중(Phase 1)"}</span>
       </div>
     </div>
   );
