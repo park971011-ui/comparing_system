@@ -10,6 +10,10 @@ SGIS_CONSUMER_SECRET = os.getenv("SGIS_CONSUMER_SECRET")
 VWORLD_API_KEY = os.getenv("VWORLD_API_KEY")
 BUILDING_HUB_API_KEY = os.getenv("BUILDING_HUB_API_KEY")
 
+# SGIS 통계지리정보서비스 — 검증된 인증 엔드포인트 (2026-06-24, accessToken 발급 확인).
+# kostat.go.kr 도메인은 mods.go.kr 로 302 리다이렉트됨 — requests 는 기본적으로 따라가므로 문제 없음.
+SGIS_AUTH_URL = "https://sgisapi.kostat.go.kr/OpenAPI3/auth/authentication.json"
+
 # 건축HUB 건축물대장정보 서비스 (공공데이터포털 id=15134735) — 검증된 base URL.
 # 주의: data.go.kr 문서/예제에 흔히 나오는 "BldRgstService_v2"는 404/500 오류가 남.
 # 올바른 경로는 "BldRgstHubService" (2026-06-24, getBrTitleInfo 로 실키 검증 완료).
