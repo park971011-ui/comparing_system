@@ -50,23 +50,65 @@ def load_active_network(t: str):
     return active_nodes.reset_index(drop=True), active_links.reset_index(drop=True)
 
 
-def build_csr(nodes: pd.DataFrame, links: pd.DataFrame) -> csr_matrix:
+def build_csr(nodes: pd.DataFrame, links: pd.DataFrame) -> tuple[csr_matrix, dict]:
+    """links 의 fromNode/toNode 는 nodes.id (전역, 비연속) 를 참조하므로
+    active_nodes 의 행 순서(0..n-1)로 재매핑한 뒤 CSR 을 만든다."""
+    id_map = {old: new for new, old in enumerate(nodes["id"])}
     n = len(nodes)
-    u = links["fromNode"].to_numpy()
-    v = links["toNode"].to_numpy()
+    u = links["fromNode"].map(id_map).to_numpy()
+    v = links["toNode"].map(id_map).to_numpy()
     src = np.concatenate([u, v])
     dst = np.concatenate([v, u])
     cost = np.concatenate([links["timeFT"].to_numpy(), links["timeTF"].to_numpy()]).astype(np.float64)
-    return csr_matrix((cost, (src, dst)), shape=(n, n))
+    return csr_matrix((cost, (src, dst)), shape=(n, n)), id_map
 
 
-def isochrone_for_region(region: str):
-    raise NotImplementedError("CORE_STATIONS 확정(Phase 0) 후 구현")
+def isochrone_for_region(region: str, nodes: pd.DataFrame, A: csr_matrix, id_map: dict) -> dict:
+    cfg = CORE_STATIONS[region]
+    row = nodes[(nodes["statnm"] == cfg["statnm"]) & (nodes["linenm"] == cfg["linenm"])]
+    if len(row) == 0:
+        raise ValueError(f"핵심역을 찾을 수 없음: {region} {cfg}")
+    src_idx = id_map[row.iloc[0]["id"]]
+
+    dist_sec = dijkstra(A, indices=src_idx)
+    nodes = nodes.copy()
+    nodes["dist_sec"] = dist_sec
+
+    polygons = {}
+    reach_counts = {}
+    for minutes, cutoff_sec in CUTOFFS_SEC.items():
+        reach = nodes[(nodes["dist_sec"] >= 0) & (nodes["dist_sec"] < cutoff_sec)]
+        reach_counts[minutes] = len(reach)
+        pts = gpd.GeoSeries(
+            gpd.points_from_xy(reach["x_5179"], reach["y_5179"]), crs="EPSG:5179"
+        )
+        buffered = pts.buffer(WALK_BUFFER_M)
+        polygons[minutes] = unary_union(buffered.to_list())
+
+    gdf = gpd.GeoDataFrame(
+        {"region": [region] * len(polygons), "minutes": list(polygons.keys())},
+        geometry=list(polygons.values()),
+        crs="EPSG:5179",
+    ).to_crs(epsg=4326)
+    gdf.to_file(f"outputs/isochrone_{region}_30_60.geojson", driver="GeoJSON")
+
+    print(f"[{region}] 핵심역={cfg['statnm']}({cfg['linenm']}) 도달역수: {reach_counts}")
+    return reach_counts
 
 
 def main():
+    nodes, links = load_active_network(T)
+    print(f"활성 노드 {len(nodes)}/{len(nodes)}, 활성 링크 {len(links)} (cutoff={T})")
+    A, id_map = build_csr(nodes, links)
+
+    summary = {}
     for region in CORE_STATIONS:
-        isochrone_for_region(region)
+        summary[region] = isochrone_for_region(region, nodes, A, id_map)
+
+    import json
+
+    with open("outputs/isochrone_reach_counts.json", "w", encoding="utf-8") as f:
+        json.dump(summary, f, ensure_ascii=False, indent=2)
 
 
 if __name__ == "__main__":
