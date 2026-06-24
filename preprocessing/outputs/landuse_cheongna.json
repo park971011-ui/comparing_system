@@ -1,0 +1,20 @@
+{
+  "region": "cheongna",
+  "parcel_count": 73,
+  "building_record_count": 8,
+  "vacant_lot_ratio": 0.9726,
+  "zoning_ratio": {
+    "일반상업지역": 0.5714,
+    "자연녹지지역": 0.2857,
+    "준공업지역": 0.1429
+  },
+  "usage_ratio": {
+    "교육연구시설": 0.6327,
+    "노유자시설": 0.0643,
+    "운동시설": 0.1412,
+    "운수시설": 0.0293,
+    "창고시설": 0.1325
+  },
+  "lum_entropy": 0.6919,
+  "avg_far": 0.3226
+}

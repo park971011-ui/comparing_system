@@ -55,3 +55,22 @@ header {
   gap: 0.5rem;
   align-items: center;
 }
+
+.metrics-table {
+  width: 100%;
+  font-size: 0.8rem;
+  border-collapse: collapse;
+}
+
+.metrics-table th,
+.metrics-table td {
+  border-bottom: 1px solid #e5e5e5;
+  padding: 0.25rem 0.4rem;
+  text-align: left;
+}
+
+.stats-note {
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 0.5rem;
+}

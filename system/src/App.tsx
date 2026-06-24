@@ -25,6 +25,8 @@ function App() {
     cheongna: EMPTY_FC,
   });
   const [reachCounts, setReachCounts] = useState<ReachCounts | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [statsSummary, setStatsSummary] = useState<any>(null);
 
   useEffect(() => {
     const base = import.meta.env.BASE_URL;
@@ -34,10 +36,12 @@ function App() {
       fetch(`${base}data/isochrone_reach_counts.json`).then((r) => r.json()),
       fetch(`${base}data/boundary_pangyo.geojson`).then((r) => r.json()),
       fetch(`${base}data/boundary_cheongna.geojson`).then((r) => r.json()),
-    ]).then(([pangyoIso, cheongnaIso, counts, pangyoBoundary, cheongnaBoundary]) => {
+      fetch(`${base}data/stats_summary.json`).then((r) => r.json()),
+    ]).then(([pangyoIso, cheongnaIso, counts, pangyoBoundary, cheongnaBoundary, stats]) => {
       setIsochroneData({ pangyo: pangyoIso, cheongna: cheongnaIso });
       setReachCounts(counts);
       setBoundaryData({ pangyo: pangyoBoundary, cheongna: cheongnaBoundary });
+      setStatsSummary(stats);
     });
   }, []);
 
@@ -83,7 +87,7 @@ function App() {
       </main>
 
       <aside className="stats-area">
-        <StatsPanel pangyo={{}} cheongna={{}} accessibilityCurve={[]} />
+        <StatsPanel pangyo={statsSummary?.pangyo} cheongna={statsSummary?.cheongna} />
       </aside>
     </div>
   );
