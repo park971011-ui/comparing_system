@@ -9,18 +9,22 @@ interface MapViewProps {
   region: Region;
   isochroneMinutes: 30 | 60;
   isochroneData: FeatureCollection;
+  boundaryData: FeatureCollection;
 }
 
+// 핵심역 실측 좌표 (subway_network/network/nodes.tsv 확인, PLAN.md §1-1)
 const REGION_CENTER: Record<Region, [number, number]> = {
-  pangyo: [127.1086, 37.4019],
-  cheongna: [126.6286, 37.5326],
+  pangyo: [127.11116, 37.39457],
+  cheongna: [126.62465, 37.55649],
 };
 
 const ISO_SOURCE_ID = "isochrone";
 const ISO_FILL_LAYER_ID = "isochrone-fill";
 const ISO_LINE_LAYER_ID = "isochrone-line";
+const BOUNDARY_SOURCE_ID = "boundary";
+const BOUNDARY_LINE_LAYER_ID = "boundary-line";
 
-export default function MapView({ region, isochroneMinutes, isochroneData }: MapViewProps) {
+export default function MapView({ region, isochroneMinutes, isochroneData, boundaryData }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
 
@@ -50,6 +54,14 @@ export default function MapView({ region, isochroneMinutes, isochroneData }: Map
         filter: ["==", ["get", "minutes"], isochroneMinutes],
         paint: { "line-color": "#1d4ed8", "line-width": 1.5 },
       });
+
+      map.addSource(BOUNDARY_SOURCE_ID, { type: "geojson", data: boundaryData });
+      map.addLayer({
+        id: BOUNDARY_LINE_LAYER_ID,
+        type: "line",
+        source: BOUNDARY_SOURCE_ID,
+        paint: { "line-color": "#dc2626", "line-width": 2.5, "line-dasharray": [2, 1] },
+      });
     });
 
     return () => {
@@ -63,10 +75,12 @@ export default function MapView({ region, isochroneMinutes, isochroneData }: Map
     const map = mapRef.current;
     if (!map) return;
     map.flyTo({ center: REGION_CENTER[region], zoom: 12 });
-    const source = map.getSource(ISO_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
-    source?.setData(isochroneData);
+    const isoSource = map.getSource(ISO_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+    isoSource?.setData(isochroneData);
+    const boundarySource = map.getSource(BOUNDARY_SOURCE_ID) as maplibregl.GeoJSONSource | undefined;
+    boundarySource?.setData(boundaryData);
     // TODO: 토지이용/건축물 컬러맵 layer 추가, 클릭 popup 바인딩 (Phase 1 데이터 수신 후)
-  }, [region, isochroneData]);
+  }, [region, isochroneData, boundaryData]);
 
   useEffect(() => {
     const map = mapRef.current;

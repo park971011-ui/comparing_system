@@ -47,6 +47,7 @@ REGIONS = {
         "expected_area_m2": 661_157,
         "boundary_source": "성남시 판교지구 지구단위계획 (특별계획구역, 2004.12 지정)",
         "core_station": {"statnm": "판교", "linenm": "신분당선"},
+        "core_station_latlon": (127.11116, 37.39457),  # nodes.tsv 확인값
         "approx_bbox_4326": (127.095, 37.392, 127.122, 37.408),  # (min_lon, min_lat, max_lon, max_lat) 임시 — 정식 경계 확보 전 OSM 테스트용
     },
     "cheongna": {
@@ -54,7 +55,9 @@ REGIONS = {
         "expected_area_m2": 278_000,
         "boundary_source": "IFEZ 지구단위계획 청라국제도시 국제업무지구 (plan_se=C03015), 토지이음 고시 eum.go.kr seq=519197",
         "core_station": {"statnm": "청라국제도시", "linenm": "공항철도"},
-        "approx_bbox_4326": (126.615, 37.525, 126.640, 37.540),  # 임시 bbox
+        # 주의: 이전 버전에서 (126.6286, 37.5326)로 잘못 기재했었음 — nodes.tsv 실측값으로 수정 (2026-06-24).
+        "core_station_latlon": (126.62465, 37.55649),
+        "approx_bbox_4326": (126.605, 37.545, 126.645, 37.567),  # 정정된 bbox
     },
 }
 

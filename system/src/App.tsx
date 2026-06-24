@@ -20,6 +20,10 @@ function App() {
     pangyo: EMPTY_FC,
     cheongna: EMPTY_FC,
   });
+  const [boundaryData, setBoundaryData] = useState<Record<Region, FeatureCollection>>({
+    pangyo: EMPTY_FC,
+    cheongna: EMPTY_FC,
+  });
   const [reachCounts, setReachCounts] = useState<ReachCounts | null>(null);
 
   useEffect(() => {
@@ -28,9 +32,12 @@ function App() {
       fetch(`${base}data/isochrone_pangyo_30_60.geojson`).then((r) => r.json()),
       fetch(`${base}data/isochrone_cheongna_30_60.geojson`).then((r) => r.json()),
       fetch(`${base}data/isochrone_reach_counts.json`).then((r) => r.json()),
-    ]).then(([pangyo, cheongna, counts]) => {
-      setIsochroneData({ pangyo, cheongna });
+      fetch(`${base}data/boundary_pangyo.geojson`).then((r) => r.json()),
+      fetch(`${base}data/boundary_cheongna.geojson`).then((r) => r.json()),
+    ]).then(([pangyoIso, cheongnaIso, counts, pangyoBoundary, cheongnaBoundary]) => {
+      setIsochroneData({ pangyo: pangyoIso, cheongna: cheongnaIso });
       setReachCounts(counts);
+      setBoundaryData({ pangyo: pangyoBoundary, cheongna: cheongnaBoundary });
     });
   }, []);
 
@@ -50,11 +57,26 @@ function App() {
 
       <main className="map-area">
         {viewMode === "toggle" ? (
-          <MapView region={region} isochroneMinutes={minutes} isochroneData={isochroneData[region]} />
+          <MapView
+            region={region}
+            isochroneMinutes={minutes}
+            isochroneData={isochroneData[region]}
+            boundaryData={boundaryData[region]}
+          />
         ) : (
           <div className="side-by-side">
-            <MapView region="pangyo" isochroneMinutes={minutes} isochroneData={isochroneData.pangyo} />
-            <MapView region="cheongna" isochroneMinutes={minutes} isochroneData={isochroneData.cheongna} />
+            <MapView
+              region="pangyo"
+              isochroneMinutes={minutes}
+              isochroneData={isochroneData.pangyo}
+              boundaryData={boundaryData.pangyo}
+            />
+            <MapView
+              region="cheongna"
+              isochroneMinutes={minutes}
+              isochroneData={isochroneData.cheongna}
+              boundaryData={boundaryData.cheongna}
+            />
           </div>
         )}
         <IsochroneLayer minutes={minutes} onChange={setMinutes} reachableStations={reachableStations} />

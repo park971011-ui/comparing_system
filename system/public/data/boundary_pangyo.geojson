@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"name": "boundary_pangyo",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "region": "pangyo", "area_m2": 661157, "actual_area_m2": 661157.0, "source": "성남시 판교지구 지구단위계획 특별계획구역(2004.12 지정) 공식 면적", "is_approximate": true, "note": "면적-일치 근사 사각형. 정식 지구단위계획 고시 경계 아님 (PLAN.md §1-2 참고)" }, "geometry": { "type": "Polygon", "coordinates": [ [ [ 127.120802260386995, 37.39864371381379 ], [ 127.119003344509807, 37.40391467542814 ], [ 127.107110703978435, 37.401330738029621 ], [ 127.10891038780926, 37.396059959406294 ], [ 127.120802260386995, 37.39864371381379 ] ] ] } }
+]
+}
