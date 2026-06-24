@@ -64,9 +64,17 @@ preprocessing/
 ├── 03_isochrone.py             # dijkstra(subway network) → 30/60분 등시간권 폴리곤(컨벡스헐 또는 역세권 버퍼 유니온)
 ├── 04_population_overlay.py    # 등시간권 polygon × SGIS 집계구 면적가중 결합 → 인구/종사자 합산
 ├── 05_road_network.py          # OSM 도로망 → 도로율·밀도
-├── 06_socio_demo.py            # 구역 내 집계구 인구·종사자·직주비
+├── 06_socio_demo.py            # 구역계 × SGIS 집계구 면적가중 결합 → 인구·종사자·직주비
+├── spatial_utils.py            # areal_weighted_sum() — 공간단위 통합 공통 함수 (04, 06 공유)
 └── outputs/                    # 모든 산출물 GeoJSON/JSON (시스템에서 바로 로드)
 ```
+
+**공간단위 통합 방법 (강령 §3-3 "공간 단위 주의" 대응)**: 구역계(`boundary_*.geojson`)와
+SGIS 집계구 경계는 일치하지 않는다. 단순 포함/제외(centroid-in-polygon 등)가 아니라
+**면적가중 비례배분(areal interpolation)** — 교차면적/집계구 전체면적 비율로 인구·종사자를
+나눠 합산한다. `spatial_utils.areal_weighted_sum()` 하나로 구현해 `04_population_overlay.py`
+(등시간권 × 집계구)와 `06_socio_demo.py`(구역계 × 집계구) 양쪽에서 동일하게 재사용한다 —
+두 분석의 처리 기준이 갈리면 "동일 기준 비교" 원칙이 깨지므로 반드시 공유 함수로 유지.
 핵심 산출물(시스템 입력용 정적 파일):
 - `boundary_pangyo.geojson`, `boundary_cheongna.geojson`
 - `landuse_pangyo.geojson`, `landuse_cheongna.geojson` (용도지역/건축물 주용도 속성 포함)

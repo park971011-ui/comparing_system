@@ -9,20 +9,20 @@
   stats_summary.json 의 accessibility 섹션
   preprocessing/outputs/accessibility_curve.json (0~60분, 5분 단위)
 
-방법(공간단위 통합): 집계구가 등시간권 경계에 걸칠 경우 교차면적/집계구면적 비율로
-인구·종사자를 비례 배분(areal interpolation)한다. 보고서 "분석 방법" 절에 동일 서술 필요.
+공간단위 통합: spatial_utils.areal_weighted_sum() 사용 (06_socio_demo.py 와 동일 방법 공유).
+누적 접근성 곡선을 만들려면 03_isochrone.py 를 5분 간격 cutoff(0,5,...,60)로 반복 실행해
+각 간격의 polygon 을 만들고 이 함수에 통과시키면 된다.
 """
 import geopandas as gpd
 
-
-def areal_weighted_sum(isochrone: gpd.GeoDataFrame, census: gpd.GeoDataFrame, value_cols: list[str]) -> dict:
-    inter = gpd.overlay(census, isochrone[["geometry"]], how="intersection")
-    inter["weight"] = inter.geometry.area / inter["geometry_area_full"]
-    return {col: float((inter[col] * inter["weight"]).sum()) for col in value_cols}
+from spatial_utils import areal_weighted_sum
 
 
 def main():
-    raise NotImplementedError("Phase 1 SGIS 수집 + Phase 3 등시간권 완료 후 구현")
+    raise NotImplementedError(
+        "Phase 1 SGIS 집계구 수집 후 구현 — areal_weighted_sum(census_5179, isochrone_5179, "
+        "['population','workers']) 형태로 호출"
+    )
 
 
 if __name__ == "__main__":
