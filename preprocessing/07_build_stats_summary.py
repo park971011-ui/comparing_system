@@ -16,10 +16,11 @@ def main():
     summary = {}
     for region in ("pangyo", "cheongna"):
         landuse = load(f"landuse_{region}.json")
+        socio_demo = load(f"socio_demo_{region}.json")
         summary[region] = {
             "landuse": landuse,
             "transport": {"isochrone_reachable_stations": reach_counts[region]},
-            "socio_demo": "pending (Phase 1 SGIS 집계구 수집 대기)",
+            "socio_demo": socio_demo,
         }
     with open(f"{OUT_DIR}/stats_summary.json", "w", encoding="utf-8") as f:
         json.dump(summary, f, ensure_ascii=False, indent=2)

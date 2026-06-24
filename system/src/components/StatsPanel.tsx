@@ -9,9 +9,19 @@ interface RegionLanduse {
   avg_far: number | null;
 }
 
+interface RegionSocioDemo {
+  population: number;
+  households: number;
+  workers: number;
+  firms: number;
+  job_housing_ratio: number | null;
+  stats_year: string;
+}
+
 interface RegionStats {
   landuse: RegionLanduse;
   transport: { isochrone_reachable_stations: Record<"30" | "60", number> };
+  socio_demo: RegionSocioDemo;
 }
 
 interface StatsPanelProps {
@@ -39,6 +49,10 @@ export default function StatsPanel({ pangyo, cheongna }: StatsPanelProps) {
     ["공지(미건축) 비율", pangyo.landuse.vacant_lot_ratio ?? "-", cheongna.landuse.vacant_lot_ratio ?? "-"],
     ["토지이용 혼합도(LUM)", pangyo.landuse.lum_entropy, cheongna.landuse.lum_entropy],
     ["매칭 건축물 레코드 수", pangyo.landuse.building_record_count, cheongna.landuse.building_record_count],
+    ["인구(구역 내, 면적가중)", Math.round(pangyo.socio_demo.population), Math.round(cheongna.socio_demo.population)],
+    ["종사자수(구역 내, 면적가중)", Math.round(pangyo.socio_demo.workers), Math.round(cheongna.socio_demo.workers)],
+    ["사업체수", Math.round(pangyo.socio_demo.firms), Math.round(cheongna.socio_demo.firms)],
+    ["직주비(종사자/인구)", pangyo.socio_demo.job_housing_ratio ?? "-", cheongna.socio_demo.job_housing_ratio ?? "-"],
   ];
 
   return (
@@ -75,7 +89,8 @@ export default function StatsPanel({ pangyo, cheongna }: StatsPanelProps) {
         </tbody>
       </table>
       <p className="stats-note">
-        ※ 경계는 공식 면적 기준 근사 폴리곤(PLAN.md §1-2). 인구·종사자(SGIS) 지표는 수집 후 추가됩니다.
+        ※ 경계는 공식 면적 기준 근사 폴리곤(PLAN.md §1-2). 인구·종사자는 SGIS 집계구
+        ({pangyo.socio_demo.stats_year}년)를 면적가중 비례배분(areal interpolation)해 산출.
       </p>
     </div>
   );
