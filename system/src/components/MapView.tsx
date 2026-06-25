@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import maplibregl, { Map as MapLibreMap } from "maplibre-gl";
 import type { FeatureCollection } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { USAGE_COLOR_MATCH } from "../usageColors";
 
 type Region = "pangyo" | "cheongna";
 
@@ -27,26 +28,6 @@ const BOUNDARY_LINE_LAYER_ID = "boundary-line";
 const PARCEL_SOURCE_ID = "parcels";
 const PARCEL_FILL_LAYER_ID = "parcels-fill";
 const PARCEL_LINE_LAYER_ID = "parcels-line";
-
-// 건축물 주용도별 색상 — 범례는 StatsPanel/legend 컴포넌트에서 동일 매핑 사용
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const USAGE_COLOR_MATCH: any[] = [
-  "match",
-  ["get", "mainPurpsCdNm"],
-  "업무시설", "#2563eb",
-  "공동주택", "#f59e0b",
-  "교육연구시설", "#10b981",
-  "판매시설", "#a855f7",
-  "숙박시설", "#ec4899",
-  "제1종근린생활시설", "#fbbf24",
-  "제2종근린생활시설", "#fcd34d",
-  "자동차관련시설", "#64748b",
-  "창고시설", "#78716c",
-  "운동시설", "#06b6d4",
-  "운수시설", "#0ea5e9",
-  "종교시설", "#f43f5e",
-  /* 기타/미분류(공지 포함) */ "#d1d5db",
-];
 
 export default function MapView({ region, isochroneMinutes, isochroneData, boundaryData, parcelData }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null);

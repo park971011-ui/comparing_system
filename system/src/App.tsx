@@ -4,6 +4,7 @@ import MapView from "./components/MapView";
 import IsochroneLayer from "./components/IsochroneLayer";
 import StatsPanel from "./components/StatsPanel";
 import RegionToggle from "./components/RegionToggle";
+import MapLegend from "./components/MapLegend";
 import "./App.css";
 
 type Region = "pangyo" | "cheongna";
@@ -98,6 +99,7 @@ function App() {
           </div>
         )}
         <IsochroneLayer minutes={minutes} onChange={setMinutes} reachableStations={reachableStations} />
+        <MapLegend />
       </main>
 
       <aside className="stats-area">
